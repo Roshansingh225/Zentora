@@ -92,6 +92,7 @@ if (canvasBox) {
 }
 
 const homeText = await page.locator("body").innerText();
+const adminHiddenFromHome = !homeText.includes("Admin");
 const homeOverflow = await hasOverflow(page);
 
 await page.goto(`${baseUrl}/grocery`, { waitUntil: "networkidle", timeout: 60_000 });
@@ -113,6 +114,32 @@ const featureChecks = {
 };
 const groceryOverflow = await hasOverflow(page);
 const groceryImages = await loadedImageStats(page);
+await page.locator('button:has-text("Add")').first().click();
+await page.waitForTimeout(500);
+const loginGateAppeared = await page.locator("text=Login required").first().isVisible().catch(() => false);
+
+await page.goto(`${baseUrl}/fashion`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.locator('a[href="/fashion/fashion-jacket"]').first().click();
+await page.waitForURL("**/fashion/fashion-jacket", { timeout: 10_000 });
+await page.locator("text=Product specifications").waitFor({ timeout: 10_000 });
+const fashionDetailText = await page.locator("body").innerText();
+const fashionDetailTextLower = fashionDetailText.toLowerCase();
+const fashionDetailChecks = {
+  detailUrl: page.url().endsWith("/fashion/fashion-jacket"),
+  description: fashionDetailTextLower.includes("product specifications"),
+  addToCart: fashionDetailTextLower.includes("add to cart"),
+};
+
+await page.goto(`${baseUrl}/cart`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.waitForTimeout(600);
+const cartText = await page.locator("body").innerText();
+const cartTextLower = cartText.toLowerCase();
+const cartChecks = {
+  addedProducts: cartTextLower.includes("added products"),
+  deliveryAddress: cartTextLower.includes("delivery address"),
+  deliveryCharge: cartTextLower.includes("delivery charge") || cartTextLower.includes("delivery"),
+  loginRequired: cartTextLower.includes("login required"),
+};
 
 await page.goto(`${baseUrl}/admin`, { waitUntil: "networkidle", timeout: 60_000 });
 await page.waitForTimeout(700);
@@ -147,11 +174,15 @@ const result = {
   canvasStats,
   canvasCount,
   homeOverflow,
+  adminHiddenFromHome,
   groceryOverflow,
   mobileOverflow,
+  loginGateAppeared,
   standaloneFood,
   missingCategories,
   featureChecks,
+  fashionDetailChecks,
+  cartChecks,
   adminChecks,
   groceryImages,
   pageErrors,
@@ -162,11 +193,15 @@ const failed =
   canvasStats.uniqueSamples < 20 ||
   canvasStats.nonDark < 20 ||
   homeOverflow ||
+  !adminHiddenFromHome ||
   groceryOverflow ||
   mobileOverflow ||
+  !loginGateAppeared ||
   standaloneFood ||
   missingCategories.length > 0 ||
   Object.values(featureChecks).some((value) => !value) ||
+  Object.values(fashionDetailChecks).some((value) => !value) ||
+  Object.values(cartChecks).some((value) => !value) ||
   Object.values(adminChecks).some((value) => !value) ||
   pageErrors.length > 0;
 

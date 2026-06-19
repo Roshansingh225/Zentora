@@ -1,8 +1,18 @@
-import { Suspense, useMemo, useState, type ButtonHTMLAttributes, type ReactNode } from "react";
+import {
+  createContext,
+  Suspense,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ButtonHTMLAttributes,
+  type FormEvent,
+  type ReactNode,
+} from "react";
 import { Canvas } from "@react-three/fiber";
 import { Float, OrbitControls, Sparkles } from "@react-three/drei";
 import { motion } from "framer-motion";
-import { Link, NavLink, Route, Routes } from "react-router-dom";
+import { Link, NavLink, Route, Routes, useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { cva, type VariantProps } from "class-variance-authority";
@@ -27,9 +37,13 @@ import {
   IndianRupee,
   Layers3,
   Leaf,
+  LockKeyhole,
+  LogIn,
+  LogOut,
   MapPin,
   Megaphone,
   Milk,
+  Minus,
   Package,
   PackageCheck,
   PawPrint,
@@ -49,13 +63,17 @@ import {
   Store,
   Tag,
   Truck,
+  Trash2,
   UserRound,
   Warehouse,
   Wheat,
+  X,
   type LucideIcon,
 } from "lucide-react";
 import { z } from "zod";
+import type { Session } from "@supabase/supabase-js";
 import { cn } from "./lib/utils";
+import { supabase } from "./lib/supabase";
 import { useCartStore } from "./store/cart";
 
 type Category = {
@@ -96,6 +114,11 @@ type FashionProduct = {
   price: number;
   rating: number;
   image: string;
+  gallery: string[];
+  description: string;
+  sizes: string[];
+  colors: string[];
+  specs: string[];
   badge: string;
 };
 
@@ -279,6 +302,15 @@ const fashionProducts: FashionProduct[] = [
     price: 3299,
     rating: 4.8,
     image: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?auto=format&fit=crop&w=900&q=80",
+    ],
+    description:
+      "A premium lightweight overshirt with structured shoulders, breathable weave and a polished city fit for everyday layering.",
+    sizes: ["S", "M", "L", "XL"],
+    colors: ["Graphite", "Ivory", "Olive"],
+    specs: ["Relaxed fit", "Cotton-blend shell", "Hidden placket", "Machine washable"],
     badge: "New drop",
   },
   {
@@ -289,6 +321,15 @@ const fashionProducts: FashionProduct[] = [
     price: 5799,
     rating: 4.7,
     image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=900&q=80",
+    ],
+    description:
+      "Cushioned performance sneakers built for all-day comfort, sharp street styling and high-grip movement.",
+    sizes: ["6", "7", "8", "9", "10"],
+    colors: ["Crimson", "White", "Black"],
+    specs: ["Foam midsole", "Mesh upper", "Rubber outsole", "Padded ankle collar"],
     badge: "Best seller",
   },
   {
@@ -299,6 +340,15 @@ const fashionProducts: FashionProduct[] = [
     price: 8999,
     rating: 4.9,
     image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
+    gallery: [
+      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80",
+      "https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=900&q=80",
+    ],
+    description:
+      "A polished chronograph watch with a midnight dial, stainless steel body and premium gifting finish.",
+    sizes: ["42mm"],
+    colors: ["Midnight", "Silver", "Rose Gold"],
+    specs: ["Chronograph movement", "Stainless steel", "Water resistant", "Two-year warranty"],
     badge: "Premium",
   },
 ];
@@ -390,6 +440,193 @@ function Price({ value }: { value: number }) {
   );
 }
 
+type AuthContextValue = {
+  session: Session | null;
+  loading: boolean;
+  openLogin: (message?: string) => void;
+  signOut: () => Promise<void>;
+};
+
+const AuthContext = createContext<AuthContextValue | null>(null);
+
+function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used inside AuthProvider");
+  }
+  return context;
+}
+
+function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [authMessage, setAuthMessage] = useState("Login is required before adding products to cart.");
+
+  useEffect(() => {
+    let mounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return;
+      setSession(data.session);
+      setLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession);
+      if (nextSession) {
+        setAuthOpen(false);
+      }
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  function openLogin(message = "Login is required before adding products to cart.") {
+    setAuthMessage(message);
+    setAuthOpen(true);
+  }
+
+  async function signOut() {
+    await supabase.auth.signOut();
+  }
+
+  return (
+    <AuthContext.Provider value={{ session, loading, openLogin, signOut }}>
+      {children}
+      <AuthModal open={authOpen} message={authMessage} onClose={() => setAuthOpen(false)} />
+    </AuthContext.Provider>
+  );
+}
+
+function AuthModal({ open, message, onClose }: { open: boolean; message: string; onClose: () => void }) {
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [status, setStatus] = useState(message);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setStatus(message);
+    }
+  }, [message, open]);
+
+  async function submitAuth(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setStatus(mode === "login" ? "Signing you in..." : "Creating your account...");
+
+    const authCall =
+      mode === "login"
+        ? supabase.auth.signInWithPassword({ email, password })
+        : supabase.auth.signUp({ email, password });
+    const { data, error } = await authCall;
+
+    if (error) {
+      setStatus(error.message);
+      setSubmitting(false);
+      return;
+    }
+
+    if (data.session) {
+      setStatus("Login successful.");
+      onClose();
+      setSubmitting(false);
+      return;
+    }
+
+    setStatus("Account created. Please verify your email, then login.");
+    setSubmitting(false);
+  }
+
+  async function continueWithGoogle() {
+    setSubmitting(true);
+    setStatus("Opening Google login...");
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      setStatus(error.message);
+      setSubmitting(false);
+    }
+  }
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-black/70 px-4 backdrop-blur-xl">
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        className="w-full max-w-md rounded-[1.75rem] border border-white/12 bg-obsidian p-6 shadow-2xl shadow-black/50"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gold/15 text-gold">
+              <LockKeyhole className="h-5 w-5" />
+            </span>
+            <h2 className="mt-4 font-display text-3xl font-black">{mode === "login" ? "Login" : "Create account"}</h2>
+            <p className="mt-2 text-sm leading-6 text-white/60">{status}</p>
+          </div>
+          <button onClick={onClose} className="grid h-10 w-10 place-items-center rounded-full bg-white/8 text-white/70">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={submitAuth} className="mt-6 space-y-4">
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Email</span>
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              type="email"
+              className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50"
+              placeholder="you@example.com"
+            />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Password</span>
+            <input
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              minLength={6}
+              type="password"
+              className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50"
+              placeholder="Minimum 6 characters"
+            />
+          </label>
+          <Button type="submit" className="w-full" disabled={submitting}>
+            <LogIn className="h-4 w-4" />
+            {mode === "login" ? "Login to Continue" : "Create Account"}
+          </Button>
+          <Button type="button" variant="secondary" className="w-full" disabled={submitting} onClick={continueWithGoogle}>
+            Continue with Google
+          </Button>
+        </form>
+
+        <button
+          onClick={() => {
+            setMode(mode === "login" ? "signup" : "login");
+            setStatus(mode === "login" ? "Create a new account to start shopping." : "Login with your existing account.");
+          }}
+          className="mt-5 w-full text-center text-sm font-semibold text-gold"
+        >
+          {mode === "login" ? "New user? Create account" : "Already have account? Login"}
+        </button>
+      </motion.div>
+    </div>
+  );
+}
+
 function FloatingBag({ position, color }: { position: [number, number, number]; color: string }) {
   return (
     <Float speed={2.2} rotationIntensity={0.85} floatIntensity={1.2}>
@@ -443,6 +680,7 @@ function HeroScene() {
 function Layout({ children }: { children: ReactNode }) {
   const cartItems = useCartStore((state) => state.items);
   const cartCount = cartItems.reduce((count, item) => count + item.quantity, 0);
+  const { session, loading, openLogin, signOut } = useAuth();
 
   return (
     <div className="min-h-screen overflow-hidden bg-obsidian text-white">
@@ -462,7 +700,6 @@ function Layout({ children }: { children: ReactNode }) {
               ["Home", "/"],
               ["Fashion", "/fashion"],
               ["Grocery", "/grocery"],
-              ["Admin", "/admin"],
             ].map(([label, href]) => (
               <NavLink
                 key={href}
@@ -485,7 +722,25 @@ function Layout({ children }: { children: ReactNode }) {
             >
               Same-day Grocery
             </Link>
-            <Link to="/grocery" className="relative rounded-full border border-white/12 bg-white/8 p-3 text-white">
+            {session ? (
+              <button
+                onClick={() => void signOut()}
+                className="hidden items-center gap-2 rounded-full border border-white/12 bg-white/8 px-4 py-3 text-sm font-semibold text-white/70 transition hover:text-white sm:inline-flex"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            ) : (
+              <button
+                onClick={() => openLogin("Login to shop, add products and checkout.")}
+                disabled={loading}
+                className="hidden items-center gap-2 rounded-full border border-gold/35 bg-gold/12 px-4 py-3 text-sm font-semibold text-gold transition hover:bg-gold/20 sm:inline-flex"
+              >
+                <LogIn className="h-4 w-4" />
+                Login
+              </button>
+            )}
+            <Link to="/cart" className="relative rounded-full border border-white/12 bg-white/8 p-3 text-white">
               <ShoppingCart className="h-5 w-5" />
               {cartCount > 0 && (
                 <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[11px] font-bold text-obsidian">
@@ -516,7 +771,7 @@ function Hero() {
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70 sm:text-xl">
             Everything you love in one destination: luxury fashion drops, daily grocery essentials, smart delivery slots,
-            and live admin operations.
+            and premium checkout.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Link to="/fashion" className={buttonStyles({ variant: "primary" })}>
@@ -624,6 +879,15 @@ function MarketplaceCard({
 
 function FashionPage() {
   const addItem = useCartStore((state) => state.addItem);
+  const { session, openLogin } = useAuth();
+
+  function addFashionProduct(product: FashionProduct) {
+    if (!session) {
+      openLogin("Login required: please login before adding fashion products to cart.");
+      return;
+    }
+    addItem({ id: product.id, title: product.title, price: product.price, unit: "1 item", source: "fashion" });
+  }
 
   return (
     <Layout>
@@ -661,27 +925,31 @@ function FashionPage() {
                   whileHover={{ y: -6 }}
                   className="overflow-hidden rounded-[1.75rem] border border-white/10 bg-white/8 shadow-2xl shadow-black/20"
                 >
-                  <div className="relative h-72">
-                    <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
-                    <Pill className="absolute left-4 top-4 border-gold/35 bg-gold/15 text-gold">{product.badge}</Pill>
-                    <div className="absolute right-4 top-4 flex gap-2">
-                      {[Heart, Eye, Share2].map((Icon, index) => (
-                        <button key={index} className="grid h-10 w-10 place-items-center rounded-full bg-obsidian/70 text-white backdrop-blur">
-                          <Icon className="h-4 w-4" />
-                        </button>
-                      ))}
+                  <Link to={`/fashion/${product.id}`} className="block">
+                    <div className="relative h-72">
+                      <img src={product.image} alt={product.title} className="h-full w-full object-cover" />
+                      <Pill className="absolute left-4 top-4 border-gold/35 bg-gold/15 text-gold">{product.badge}</Pill>
+                      <div className="absolute right-4 top-4 flex gap-2">
+                        {[Heart, Eye, Share2].map((Icon, index) => (
+                          <span key={index} className="grid h-10 w-10 place-items-center rounded-full bg-obsidian/70 text-white backdrop-blur">
+                            <Icon className="h-4 w-4" />
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="p-5">
-                    <p className="text-sm text-white/50">{product.brand} / {product.category}</p>
-                    <h3 className="mt-1 text-xl font-bold">{product.title}</h3>
-                    <div className="mt-3 flex items-center justify-between">
-                      <p className="text-2xl font-black text-gold"><Price value={product.price} /></p>
-                      <span className="inline-flex items-center gap-1 text-sm text-white/70">
-                        <Star className="h-4 w-4 fill-gold text-gold" /> {product.rating}
-                      </span>
+                    <div className="p-5">
+                      <p className="text-sm text-white/50">{product.brand} / {product.category}</p>
+                      <h3 className="mt-1 text-xl font-bold">{product.title}</h3>
+                      <div className="mt-3 flex items-center justify-between">
+                        <p className="text-2xl font-black text-gold"><Price value={product.price} /></p>
+                        <span className="inline-flex items-center gap-1 text-sm text-white/70">
+                          <Star className="h-4 w-4 fill-gold text-gold" /> {product.rating}
+                        </span>
+                      </div>
                     </div>
-                    <Button className="mt-5 w-full" onClick={() => addItem({ id: product.id, title: product.title, price: product.price, unit: "1 item", source: "fashion" })}>
+                  </Link>
+                  <div className="px-5 pb-5">
+                    <Button className="w-full" onClick={() => addFashionProduct(product)}>
                       <Plus className="h-4 w-4" /> Add to Cart
                     </Button>
                   </div>
@@ -706,6 +974,7 @@ function GroceryPage() {
   const [sort, setSort] = useState("Popular");
   const addItem = useCartStore((state) => state.addItem);
   const cartItems = useCartStore((state) => state.items);
+  const { session, openLogin } = useAuth();
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryCharge = subtotal >= 499 ? 0 : subtotal > 0 ? 49 : 0;
 
@@ -729,6 +998,14 @@ function GroceryPage() {
       return b.reviews - a.reviews;
     });
   }, [brand, category, products, query, sort]);
+
+  function addGroceryProduct(item: { id: string; title: string; price: number; unit: string; source: "grocery" }) {
+    if (!session) {
+      openLogin("Login required: please login before adding grocery products to cart.");
+      return;
+    }
+    addItem(item);
+  }
 
   return (
     <Layout>
@@ -781,7 +1058,7 @@ function GroceryPage() {
             </div>
             <div className="grid gap-5 lg:grid-cols-2">
               {filteredProducts.map((product) => (
-                <GroceryProductCard key={product.id} product={product} onAdd={addItem} />
+                <GroceryProductCard key={product.id} product={product} onAdd={addGroceryProduct} />
               ))}
             </div>
           </div>
@@ -1039,6 +1316,272 @@ function DeliveryPanel({ subtotal, deliveryCharge }: { subtotal: number; deliver
   );
 }
 
+function FashionDetailPage() {
+  const { productId } = useParams();
+  const navigate = useNavigate();
+  const product = fashionProducts.find((item) => item.id === productId);
+  const [selectedImage, setSelectedImage] = useState(product?.gallery[0] || "");
+  const [selectedSize, setSelectedSize] = useState(product?.sizes[0] || "");
+  const [selectedColor, setSelectedColor] = useState(product?.colors[0] || "");
+  const addItem = useCartStore((state) => state.addItem);
+  const { session, openLogin } = useAuth();
+
+  useEffect(() => {
+    if (product) {
+      setSelectedImage(product.gallery[0]);
+      setSelectedSize(product.sizes[0]);
+      setSelectedColor(product.colors[0]);
+    }
+  }, [product]);
+
+  if (!product) {
+    return (
+      <Layout>
+        <PageShell eyebrow="Fashion" title="Product not found" description="This fashion item is not available right now.">
+          <Button onClick={() => navigate("/fashion")}>Back to Fashion</Button>
+        </PageShell>
+      </Layout>
+    );
+  }
+
+  const selectedProduct = product;
+
+  function addProductToCart() {
+    if (!session) {
+      openLogin("Login required: please login before adding this fashion product to cart.");
+      return;
+    }
+    addItem({
+      id: `${selectedProduct.id}-${selectedSize}-${selectedColor}`,
+      title: `${selectedProduct.title} (${selectedColor}, ${selectedSize})`,
+      price: selectedProduct.price,
+      unit: "1 item",
+      source: "fashion",
+    });
+    navigate("/cart");
+  }
+
+  return (
+    <Layout>
+      <PageShell eyebrow="Fashion Detail" title={product.title} description={product.description}>
+        <section className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
+          <div className="glass-panel overflow-hidden p-4">
+            <div className="relative min-h-[520px] overflow-hidden rounded-[1.25rem] bg-white/6">
+              <img src={selectedImage} alt={product.title} className="absolute inset-0 h-full w-full object-cover" />
+              <Pill className="absolute left-4 top-4 border-gold/35 bg-gold/15 text-gold">{product.badge}</Pill>
+            </div>
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              {product.gallery.map((image) => (
+                <button
+                  key={image}
+                  onClick={() => setSelectedImage(image)}
+                  className={cn("h-28 overflow-hidden rounded-2xl border", selectedImage === image ? "border-gold" : "border-white/10")}
+                >
+                  <img src={image} alt="" className="h-full w-full object-cover" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div className="glass-panel p-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <Pill>{product.category}</Pill>
+                <Pill>{product.brand}</Pill>
+                <Pill className="inline-flex items-center gap-1 border-gold/30 bg-gold/10 text-gold">
+                  <Star className="h-3.5 w-3.5 fill-gold" /> {product.rating}
+                </Pill>
+              </div>
+              <p className="mt-6 text-4xl font-black text-gold"><Price value={product.price} /></p>
+              <p className="mt-4 leading-7 text-white/64">{product.description}</p>
+
+              <div className="mt-6">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/45">Size</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {product.sizes.map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={cn("min-w-12 rounded-2xl border px-4 py-3 text-sm font-bold", selectedSize === size ? "border-gold bg-gold/15 text-gold" : "border-white/10 bg-white/7 text-white/70")}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <p className="text-xs uppercase tracking-[0.18em] text-white/45">Color</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {product.colors.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => setSelectedColor(color)}
+                      className={cn("rounded-2xl border px-4 py-3 text-sm font-bold", selectedColor === color ? "border-gold bg-gold/15 text-gold" : "border-white/10 bg-white/7 text-white/70")}
+                    >
+                      {color}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <Button className="mt-7 w-full" onClick={addProductToCart}>
+                <ShoppingCart className="h-4 w-4" />
+                Add to Cart
+              </Button>
+            </div>
+
+            <div className="glass-panel p-6">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold">Description</p>
+              <h2 className="mt-1 font-display text-2xl font-black">Product specifications</h2>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {product.specs.map((spec) => (
+                  <div key={spec} className="rounded-2xl border border-white/10 bg-white/7 p-4 text-sm text-white/68">
+                    {spec}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="glass-panel p-6">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold">Related products</p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                {fashionProducts
+                  .filter((item) => item.id !== product.id)
+                  .slice(0, 2)
+                  .map((item) => (
+                    <Link key={item.id} to={`/fashion/${item.id}`} className="rounded-2xl border border-white/10 bg-white/7 p-4 transition hover:border-gold/40">
+                      <span className="block font-bold">{item.title}</span>
+                      <span className="mt-1 block text-sm text-white/52">{item.brand}</span>
+                    </Link>
+                  ))}
+              </div>
+            </div>
+          </div>
+        </section>
+      </PageShell>
+    </Layout>
+  );
+}
+
+function CartPage() {
+  const items = useCartStore((state) => state.items);
+  const setQuantity = useCartStore((state) => state.setQuantity);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const clear = useCartStore((state) => state.clear);
+  const { session, openLogin } = useAuth();
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const deliveryCharge = subtotal >= 499 ? 0 : subtotal > 0 ? 49 : 0;
+
+  return (
+    <Layout>
+      <PageShell
+        eyebrow="Cart"
+        title="Added products and delivery"
+        description="Review added products, update quantities and add delivery address before checkout."
+      >
+        {!session && (
+          <div className="mb-6 rounded-[1.5rem] border border-gold/25 bg-gold/10 p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="font-display text-2xl font-black">Login required for checkout</h2>
+                <p className="mt-1 text-sm text-white/62">Please login before adding products or placing an order.</p>
+              </div>
+              <Button onClick={() => openLogin("Login required before checkout and order delivery.")}>
+                <LogIn className="h-4 w-4" />
+                Login
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <section className="grid gap-6 xl:grid-cols-[1fr_380px]">
+          <div className="glass-panel p-5">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-gold">Added products</p>
+                <h2 className="mt-1 font-display text-3xl font-black">Cart items</h2>
+              </div>
+              {items.length > 0 && (
+                <Button variant="secondary" size="sm" onClick={clear}>
+                  <Trash2 className="h-4 w-4" />
+                  Clear
+                </Button>
+              )}
+            </div>
+
+            {items.length === 0 ? (
+              <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/7 p-8 text-center">
+                <ShoppingCart className="mx-auto h-10 w-10 text-gold" />
+                <h3 className="mt-4 text-2xl font-black">No products added</h3>
+                <p className="mt-2 text-white/55">Add fashion or grocery products to see them here.</p>
+                <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
+                  <Link to="/fashion" className={buttonStyles({ variant: "secondary" })}>Shop Fashion</Link>
+                  <Link to="/grocery" className={buttonStyles({ variant: "primary" })}>Shop Grocery</Link>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-6 space-y-4">
+                {items.map((item) => (
+                  <article key={item.id} className="grid gap-4 rounded-[1.5rem] border border-white/10 bg-white/7 p-4 sm:grid-cols-[1fr_auto] sm:items-center">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Pill>{item.source === "fashion" ? "Fashion" : "Grocery"}</Pill>
+                        <Pill>{item.unit}</Pill>
+                      </div>
+                      <h3 className="mt-3 text-xl font-bold">{item.title}</h3>
+                      <p className="mt-1 text-sm text-white/55">
+                        <Price value={item.price} /> each
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button onClick={() => setQuantity(item.id, item.quantity - 1)} className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/8">
+                        <Minus className="h-4 w-4" />
+                      </button>
+                      <span className="min-w-8 text-center text-lg font-black">{item.quantity}</span>
+                      <button onClick={() => setQuantity(item.id, item.quantity + 1)} className="grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-white/8">
+                        <Plus className="h-4 w-4" />
+                      </button>
+                      <button onClick={() => removeItem(item.id)} className="grid h-10 w-10 place-items-center rounded-full border border-rose-300/20 bg-rose-500/10 text-rose-200">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-5">
+            <div className="glass-panel p-5">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold">Order summary</p>
+              <div className="mt-5 space-y-3">
+                <div className="flex justify-between text-white/64">
+                  <span>Products</span>
+                  <span>{items.reduce((sum, item) => sum + item.quantity, 0)}</span>
+                </div>
+                <div className="flex justify-between text-white/64">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-white/64">
+                  <span>Delivery</span>
+                  <span>{deliveryCharge === 0 ? "Free" : `₹${deliveryCharge}`}</span>
+                </div>
+                <div className="border-t border-white/10 pt-3 flex justify-between text-xl font-black text-gold">
+                  <span>Total</span>
+                  <span>₹{(subtotal + deliveryCharge).toLocaleString("en-IN")}</span>
+                </div>
+              </div>
+            </div>
+            <DeliveryPanel subtotal={subtotal} deliveryCharge={deliveryCharge} />
+          </div>
+        </section>
+      </PageShell>
+    </Layout>
+  );
+}
+
 function AdminPage() {
   const [active, setActive] = useState<"fashion" | "grocery">("grocery");
   const modules = active === "fashion" ? fashionAdminModules : groceryAdminModules;
@@ -1172,12 +1715,16 @@ function PageShell({
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/fashion" element={<FashionPage />} />
-      <Route path="/grocery" element={<GroceryPage />} />
-      <Route path="/admin" element={<AdminPage />} />
-      <Route path="*" element={<LandingPage />} />
-    </Routes>
+    <AuthProvider>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/fashion" element={<FashionPage />} />
+        <Route path="/fashion/:productId" element={<FashionDetailPage />} />
+        <Route path="/grocery" element={<GroceryPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/admin" element={<AdminPage />} />
+        <Route path="*" element={<LandingPage />} />
+      </Routes>
+    </AuthProvider>
   );
 }
