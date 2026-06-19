@@ -1,0 +1,84 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Poppins:wght@600;700;800;900&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+  font-family: "Inter", "Poppins", system-ui, sans-serif;
+  background: #09090b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at 18% 8%, rgba(212, 175, 55, 0.09), transparent 28rem),
+    radial-gradient(circle at 88% 28%, rgba(52, 211, 153, 0.1), transparent 30rem),
+    #09090b;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img {
+  display: block;
+}
+
+option {
+  background: #121216;
+  color: #fff;
+}
+
+.hero-canvas {
+  height: 100% !important;
+  width: 100% !important;
+}
+
+.glass-panel {
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  border-radius: 1.75rem;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.055));
+  box-shadow: 0 22px 80px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(22px);
+}
+
+.select-control {
+  min-height: 3rem;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  padding: 0 1rem;
+  color: #fff;
+  outline: none;
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.select-control:focus {
+  border-color: rgba(212, 175, 55, 0.58);
+  background: rgba(255, 255, 255, 0.11);
+}
+
+@media (max-width: 640px) {
+  .glass-panel {
+    border-radius: 1.25rem;
+  }
+}
