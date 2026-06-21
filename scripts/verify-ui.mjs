@@ -1,7 +1,7 @@
 import { chromium } from "playwright";
 import { PNG } from "pngjs";
 
-const baseUrl = process.env.ZENTORA_URL || "http://localhost:5173";
+const baseUrl = process.env.AJIOMART_URL || "http://localhost:5173";
 
 const requiredCategories = [
   "Fruits & Vegetables",

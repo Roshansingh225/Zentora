@@ -151,8 +151,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-tomatoes",
     title: "Premium Hybrid Tomatoes",
     category: "Fruits & Vegetables",
-    brands: ["Zentora Fresh", "FarmRoute", "Organic Valley"],
-    defaultBrand: "Zentora Fresh",
+    brands: ["ajiomart Fresh", "FarmRoute", "Organic Valley"],
+    defaultBrand: "ajiomart Fresh",
     units: [
       { label: "500g", price: 34, unitPrice: "₹68/kg" },
       { label: "1kg", price: 62, unitPrice: "₹62/kg" },
@@ -175,8 +175,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-milk",
     title: "A2 Cow Milk",
     category: "Dairy & Eggs",
-    brands: ["Amul", "Mother Dairy", "Zentora Dairy"],
-    defaultBrand: "Zentora Dairy",
+    brands: ["Amul", "Mother Dairy", "ajiomart Dairy"],
+    defaultBrand: "ajiomart Dairy",
     units: [
       { label: "500ml", price: 42, unitPrice: "₹84/L" },
       { label: "1L", price: 78, unitPrice: "₹78/L" },
@@ -199,8 +199,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-atta",
     title: "Stoneground Whole Wheat Atta",
     category: "Atta, Rice & Dal",
-    brands: ["Aashirvaad", "Fortune", "Zentora Staples"],
-    defaultBrand: "Zentora Staples",
+    brands: ["Aashirvaad", "Fortune", "ajiomart Staples"],
+    defaultBrand: "ajiomart Staples",
     units: [
       { label: "1kg", price: 58, unitPrice: "₹58/kg" },
       { label: "5kg", price: 255, unitPrice: "₹51/kg" },
@@ -223,8 +223,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-ghee",
     title: "Pure Cow Ghee",
     category: "Oil & Ghee",
-    brands: ["Amul", "Patanjali", "Zentora Gold"],
-    defaultBrand: "Zentora Gold",
+    brands: ["Amul", "Patanjali", "ajiomart Gold"],
+    defaultBrand: "ajiomart Gold",
     units: [
       { label: "500ml", price: 348, unitPrice: "₹696/L" },
       { label: "1L", price: 665, unitPrice: "₹665/L" },
@@ -247,8 +247,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-masala",
     title: "Royal Garam Masala",
     category: "Spices & Masala",
-    brands: ["MDH", "Everest", "Zentora Spice Co."],
-    defaultBrand: "Zentora Spice Co.",
+    brands: ["MDH", "Everest", "ajiomart Spice Co."],
+    defaultBrand: "ajiomart Spice Co.",
     units: [
       { label: "100g", price: 82, unitPrice: "₹820/kg" },
       { label: "200g", price: 148, unitPrice: "₹740/kg" },
@@ -271,8 +271,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-frozen",
     title: "Frozen Veg Momos",
     category: "Frozen Foods",
-    brands: ["ITC Master Chef", "McCain", "Zentora Quick"],
-    defaultBrand: "Zentora Quick",
+    brands: ["ITC Master Chef", "McCain", "ajiomart Quick"],
+    defaultBrand: "ajiomart Quick",
     units: [
       { label: "400g", price: 169, unitPrice: "₹423/kg" },
       { label: "800g", price: 318, unitPrice: "₹398/kg" },
@@ -298,7 +298,7 @@ const fashionProducts: FashionProduct[] = [
     id: "fashion-jacket",
     title: "AeroWeave Overshirt",
     category: "Men",
-    brand: "Zentora Atelier",
+    brand: "ajiomart Atelier",
     price: 3299,
     rating: 4.8,
     image: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=80",
@@ -691,7 +691,7 @@ function Layout({ children }: { children: ReactNode }) {
               <ShoppingBag className="h-5 w-5 text-gold" />
             </span>
             <span>
-              <span className="block font-display text-xl font-bold tracking-normal">Zentora</span>
+              <span className="block font-display text-xl font-bold tracking-normal">ajiomart</span>
               <span className="block text-[11px] uppercase tracking-[0.24em] text-white/45">Fashion + Grocery</span>
             </span>
           </Link>
@@ -767,7 +767,7 @@ function Hero() {
         <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
           <Pill className="border-gold/30 bg-gold/10 text-gold">Premium commerce, fast grocery delivery</Pill>
           <h1 className="mt-6 max-w-4xl font-display text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-8xl">
-            Zentora
+            ajiomart
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70 sm:text-xl">
             Everything you love in one destination: luxury fashion drops, daily grocery essentials, smart delivery slots,
