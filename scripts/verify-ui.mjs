@@ -95,7 +95,7 @@ const homeText = await page.locator("body").innerText();
 const adminHiddenFromHome = !homeText.includes("Admin");
 const homeOverflow = await hasOverflow(page);
 
-await page.goto(`${baseUrl}/grocery`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.goto(`${baseUrl}/#/grocery`, { waitUntil: "networkidle", timeout: 60_000 });
 await page.waitForTimeout(1_200);
 const groceryText = await page.locator("body").innerText();
 const groceryTextLower = groceryText.toLowerCase();
@@ -105,43 +105,58 @@ const featureChecks = {
   brandSelection: groceryTextLower.includes("brand selection"),
   frequentlyBoughtTogether: groceryTextLower.includes("frequently bought together"),
   similarProducts: groceryTextLower.includes("similar products"),
-  sameDayDelivery: groceryTextLower.includes("same-day"),
-  scheduledSlots: groceryTextLower.includes("scheduled delivery slots"),
+  noSameDay: !groceryTextLower.includes("same-day"),
+  scheduledSlots: groceryTextLower.includes("scheduled slots") || groceryTextLower.includes("scheduled delivery slots"),
   deliveryCharge: groceryTextLower.includes("delivery charge"),
   minimumOrder: groceryTextLower.includes("minimum order amount"),
-  orderTracking: groceryTextLower.includes("order tracking"),
-  statusTimeline: groceryTextLower.includes("status timeline"),
 };
 const groceryOverflow = await hasOverflow(page);
 const groceryImages = await loadedImageStats(page);
 await page.locator('button:has-text("Add")').first().click();
 await page.waitForTimeout(500);
 const loginGateAppeared = await page.locator("text=Login required").first().isVisible().catch(() => false);
+if (loginGateAppeared) {
+  await page.locator('div[class*="z-[80]"] button').first().click();
+  await page.waitForTimeout(300);
+}
 
-await page.goto(`${baseUrl}/fashion`, { waitUntil: "networkidle", timeout: 60_000 });
-await page.locator('a[href="/fashion/fashion-jacket"]').first().click();
-await page.waitForURL("**/fashion/fashion-jacket", { timeout: 10_000 });
+await page.goto(`${baseUrl}/#/fashion`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.locator('a[href="#/fashion/fashion-jacket"]').first().click();
+await page.waitForURL("**/#/fashion/fashion-jacket", { timeout: 10_000 });
 await page.locator("text=Product specifications").waitFor({ timeout: 10_000 });
 const fashionDetailText = await page.locator("body").innerText();
 const fashionDetailTextLower = fashionDetailText.toLowerCase();
 const fashionDetailChecks = {
-  detailUrl: page.url().endsWith("/fashion/fashion-jacket"),
+  detailUrl: page.url().endsWith("#/fashion/fashion-jacket"),
   description: fashionDetailTextLower.includes("product specifications"),
   addToCart: fashionDetailTextLower.includes("add to cart"),
 };
 
-await page.goto(`${baseUrl}/cart`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.goto(`${baseUrl}/#/cart`, { waitUntil: "networkidle", timeout: 60_000 });
 await page.waitForTimeout(600);
 const cartText = await page.locator("body").innerText();
 const cartTextLower = cartText.toLowerCase();
 const cartChecks = {
   addedProducts: cartTextLower.includes("added products"),
-  deliveryAddress: cartTextLower.includes("delivery address"),
+  fullAddressForm: cartTextLower.includes("full name") && cartTextLower.includes("house / flat") && cartTextLower.includes("street / area"),
+  paymentMethod: cartTextLower.includes("payment method"),
   deliveryCharge: cartTextLower.includes("delivery charge") || cartTextLower.includes("delivery"),
   loginRequired: cartTextLower.includes("login required"),
+  noTracking: !cartTextLower.includes("order tracking") && !cartTextLower.includes("status timeline"),
 };
 
-await page.goto(`${baseUrl}/admin`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.goto(`${baseUrl}/#/orders`, { waitUntil: "networkidle", timeout: 60_000 });
+await page.waitForTimeout(700);
+const ordersText = await page.locator("body").innerText();
+const ordersTextLower = ordersText.toLowerCase();
+const ordersChecks = {
+  navRoute: page.url().endsWith("#/orders"),
+  orderDetails: ordersTextLower.includes("order details"),
+  orderTracking: ordersTextLower.includes("order tracking"),
+  statusTimeline: ordersTextLower.includes("status timeline"),
+};
+
+await page.goto(`${baseUrl}/#/admin`, { waitUntil: "networkidle", timeout: 60_000 });
 await page.waitForTimeout(700);
 const adminText = await page.locator("body").innerText();
 const adminChecks = {
@@ -161,9 +176,11 @@ const adminChecks = {
 };
 
 const mobile = await browser.newPage({ viewport: { width: 390, height: 844 }, isMobile: true, deviceScaleFactor: 2 });
-await mobile.goto(`${baseUrl}/grocery`, { waitUntil: "networkidle", timeout: 60_000 });
+await mobile.goto(`${baseUrl}/#/grocery`, { waitUntil: "networkidle", timeout: 60_000 });
 await mobile.waitForTimeout(900);
 const mobileOverflow = await hasOverflow(mobile);
+const mobileText = await mobile.locator("body").innerText();
+const mobileFilterButton = mobileText.includes("Filters");
 
 await browser.close();
 
@@ -183,6 +200,8 @@ const result = {
   featureChecks,
   fashionDetailChecks,
   cartChecks,
+  ordersChecks,
+  mobileFilterButton,
   adminChecks,
   groceryImages,
   pageErrors,
@@ -202,6 +221,8 @@ const failed =
   Object.values(featureChecks).some((value) => !value) ||
   Object.values(fashionDetailChecks).some((value) => !value) ||
   Object.values(cartChecks).some((value) => !value) ||
+  Object.values(ordersChecks).some((value) => !value) ||
+  !mobileFilterButton ||
   Object.values(adminChecks).some((value) => !value) ||
   pageErrors.length > 0;
 

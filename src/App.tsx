@@ -123,9 +123,16 @@ type FashionProduct = {
 };
 
 type DeliveryForm = {
+  fullName: string;
+  phone: string;
+  house: string;
+  street: string;
+  landmark: string;
+  city: string;
+  state: string;
   pincode: string;
   slot: string;
-  address: string;
+  paymentMethod: string;
 };
 
 const groceryCategories: Category[] = [
@@ -151,8 +158,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-tomatoes",
     title: "Premium Hybrid Tomatoes",
     category: "Fruits & Vegetables",
-    brands: ["ajiomart Fresh", "FarmRoute", "Organic Valley"],
-    defaultBrand: "ajiomart Fresh",
+    brands: ["Ajiomart Fresh", "FarmRoute", "Organic Valley"],
+    defaultBrand: "Ajiomart Fresh",
     units: [
       { label: "500g", price: 34, unitPrice: "₹68/kg" },
       { label: "1kg", price: 62, unitPrice: "₹62/kg" },
@@ -169,14 +176,14 @@ const groceryProductsSeed: GroceryProduct[] = [
     reviews: 1284,
     similar: ["Cherry Tomatoes", "Organic Onions", "Fresh Coriander"],
     frequentlyBought: ["Green Chilli", "Coriander", "Ginger"],
-    badge: "Same-day",
+    badge: "Fresh",
   },
   {
     id: "grocery-milk",
     title: "A2 Cow Milk",
     category: "Dairy & Eggs",
-    brands: ["Amul", "Mother Dairy", "ajiomart Dairy"],
-    defaultBrand: "ajiomart Dairy",
+    brands: ["Amul", "Mother Dairy", "Ajiomart Dairy"],
+    defaultBrand: "Ajiomart Dairy",
     units: [
       { label: "500ml", price: 42, unitPrice: "₹84/L" },
       { label: "1L", price: 78, unitPrice: "₹78/L" },
@@ -199,8 +206,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-atta",
     title: "Stoneground Whole Wheat Atta",
     category: "Atta, Rice & Dal",
-    brands: ["Aashirvaad", "Fortune", "ajiomart Staples"],
-    defaultBrand: "ajiomart Staples",
+    brands: ["Aashirvaad", "Fortune", "Ajiomart Staples"],
+    defaultBrand: "Ajiomart Staples",
     units: [
       { label: "1kg", price: 58, unitPrice: "₹58/kg" },
       { label: "5kg", price: 255, unitPrice: "₹51/kg" },
@@ -223,8 +230,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-ghee",
     title: "Pure Cow Ghee",
     category: "Oil & Ghee",
-    brands: ["Amul", "Patanjali", "ajiomart Gold"],
-    defaultBrand: "ajiomart Gold",
+    brands: ["Amul", "Patanjali", "Ajiomart Gold"],
+    defaultBrand: "Ajiomart Gold",
     units: [
       { label: "500ml", price: 348, unitPrice: "₹696/L" },
       { label: "1L", price: 665, unitPrice: "₹665/L" },
@@ -247,8 +254,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-masala",
     title: "Royal Garam Masala",
     category: "Spices & Masala",
-    brands: ["MDH", "Everest", "ajiomart Spice Co."],
-    defaultBrand: "ajiomart Spice Co.",
+    brands: ["MDH", "Everest", "Ajiomart Spice Co."],
+    defaultBrand: "Ajiomart Spice Co.",
     units: [
       { label: "100g", price: 82, unitPrice: "₹820/kg" },
       { label: "200g", price: 148, unitPrice: "₹740/kg" },
@@ -271,8 +278,8 @@ const groceryProductsSeed: GroceryProduct[] = [
     id: "grocery-frozen",
     title: "Frozen Veg Momos",
     category: "Frozen Foods",
-    brands: ["ITC Master Chef", "McCain", "ajiomart Quick"],
-    defaultBrand: "ajiomart Quick",
+    brands: ["ITC Master Chef", "McCain", "Ajiomart Quick"],
+    defaultBrand: "Ajiomart Quick",
     units: [
       { label: "400g", price: 169, unitPrice: "₹423/kg" },
       { label: "800g", price: 318, unitPrice: "₹398/kg" },
@@ -298,7 +305,7 @@ const fashionProducts: FashionProduct[] = [
     id: "fashion-jacket",
     title: "AeroWeave Overshirt",
     category: "Men",
-    brand: "ajiomart Atelier",
+    brand: "Ajiomart Atelier",
     price: 3299,
     rating: 4.8,
     image: "https://images.unsplash.com/photo-1516257984-b1b4d707412e?auto=format&fit=crop&w=900&q=80",
@@ -691,7 +698,7 @@ function Layout({ children }: { children: ReactNode }) {
               <ShoppingBag className="h-5 w-5 text-gold" />
             </span>
             <span>
-              <span className="block font-display text-xl font-bold tracking-normal">ajiomart</span>
+              <span className="block font-display text-xl font-bold tracking-normal">Ajiomart</span>
               <span className="block text-[11px] uppercase tracking-[0.24em] text-white/45">Fashion + Grocery</span>
             </span>
           </Link>
@@ -700,6 +707,7 @@ function Layout({ children }: { children: ReactNode }) {
               ["Home", "/"],
               ["Fashion", "/fashion"],
               ["Grocery", "/grocery"],
+              ["Orders", "/orders"],
             ].map(([label, href]) => (
               <NavLink
                 key={href}
@@ -716,11 +724,8 @@ function Layout({ children }: { children: ReactNode }) {
             ))}
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              to="/grocery"
-              className="hidden rounded-full border border-emerald/30 bg-emerald/10 px-4 py-2 text-sm font-semibold text-emerald sm:inline-flex"
-            >
-              Same-day Grocery
+            <Link to="/orders" className="hidden rounded-full border border-emerald/30 bg-emerald/10 px-4 py-2 text-sm font-semibold text-emerald sm:inline-flex">
+              Orders
             </Link>
             {session ? (
               <button
@@ -765,9 +770,9 @@ function Hero() {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_65%_12%,rgba(212,175,55,.18),transparent_32%),radial-gradient(circle_at_20%_70%,rgba(52,211,153,.15),transparent_28%),linear-gradient(180deg,rgba(9,9,11,.52),#09090B_88%)]" />
       <div className="relative z-10 mx-auto grid min-h-[calc(92vh-7rem)] max-w-7xl items-center gap-12 px-4 pb-14 sm:px-6 lg:grid-cols-[1.05fr_.95fr] lg:px-8">
         <motion.div initial={{ opacity: 0, y: 28 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
-          <Pill className="border-gold/30 bg-gold/10 text-gold">Premium commerce, fast grocery delivery</Pill>
+          <Pill className="border-gold/30 bg-gold/10 text-gold">Premium commerce, fresh grocery shopping</Pill>
           <h1 className="mt-6 max-w-4xl font-display text-5xl font-black leading-[0.96] text-white sm:text-7xl lg:text-8xl">
-            ajiomart
+            Ajiomart
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-white/70 sm:text-xl">
             Everything you love in one destination: luxury fashion drops, daily grocery essentials, smart delivery slots,
@@ -792,7 +797,7 @@ function Hero() {
         >
           <div className="glass-panel p-5">
             <div className="grid grid-cols-2 gap-4">
-              <Metric label="Same-day orders" value="6.2k" icon={Truck} />
+              <Metric label="Daily orders" value="6.2k" icon={Truck} />
               <Metric label="Freshness score" value="98%" icon={Leaf} />
               <Metric label="Fashion SKUs" value="1.2k" icon={Shirt} />
               <Metric label="Live delivery slots" value="18" icon={CalendarClock} />
@@ -880,6 +885,7 @@ function MarketplaceCard({
 function FashionPage() {
   const addItem = useCartStore((state) => state.addItem);
   const { session, openLogin } = useAuth();
+  const [showFilters, setShowFilters] = useState(false);
 
   function addFashionProduct(product: FashionProduct) {
     if (!session) {
@@ -893,11 +899,18 @@ function FashionPage() {
     <Layout>
       <PageShell
         eyebrow="Fashion Marketplace"
-        title="Premium drops with powerful filters"
-        description="Search, category, brand, color, size, price, discount, rating, availability and sorting controls are ready for catalogue integration."
+        title="Premium drops"
+        description="Browse fashion products with quick filters, sorting and product detail pages."
       >
+        <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+          <p className="text-sm text-white/55">{fashionProducts.length} fashion products</p>
+          <Button variant="secondary" size="sm" onClick={() => setShowFilters((value) => !value)}>
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </Button>
+        </div>
         <div className="grid gap-5 lg:grid-cols-[280px_1fr]">
-          <aside className="glass-panel h-fit p-5">
+          <aside className={cn("glass-panel h-fit p-5", showFilters ? "block" : "hidden lg:block")}>
             <h2 className="font-display text-xl font-bold">Filters</h2>
             <div className="mt-5 space-y-4">
               {["Search", "Category", "Brand", "Color", "Size", "Price", "Discount", "Rating", "Availability"].map((filter) => (
@@ -972,6 +985,7 @@ function GroceryPage() {
   const [category, setCategory] = useState("All");
   const [brand, setBrand] = useState("All Brands");
   const [sort, setSort] = useState("Popular");
+  const [showFilters, setShowFilters] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const cartItems = useCartStore((state) => state.items);
   const { session, openLogin } = useAuth();
@@ -1014,7 +1028,15 @@ function GroceryPage() {
         title="Fresh grocery, planned delivery, reliable stock"
         description="Grocery is now the dedicated daily-essentials marketplace across customer and admin flows."
       >
-        <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mb-4 flex items-center justify-between gap-3 lg:hidden">
+          <p className="text-sm text-white/55">{filteredProducts.length} grocery products</p>
+          <Button variant="secondary" size="sm" onClick={() => setShowFilters((value) => !value)}>
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+          </Button>
+        </div>
+
+        <section className={cn("grid gap-4 md:grid-cols-2 xl:grid-cols-5", showFilters ? "grid" : "hidden lg:grid")}>
           {groceryCategories.map((item) => (
             <CategoryTile key={item.name} category={item} active={category === item.name} onClick={() => setCategory(item.name)} />
           ))}
@@ -1022,7 +1044,7 @@ function GroceryPage() {
 
         <section className="mt-8 grid gap-6 xl:grid-cols-[1fr_360px]">
           <div>
-            <div className="glass-panel mb-5 grid gap-3 p-4 lg:grid-cols-[1fr_220px_220px_180px]">
+            <div className={cn("glass-panel mb-5 gap-3 p-4 lg:grid lg:grid-cols-[1fr_220px_220px_180px]", showFilters ? "grid" : "hidden lg:grid")}>
               <label className="relative">
                 <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" />
                 <input
@@ -1063,7 +1085,7 @@ function GroceryPage() {
             </div>
           </div>
 
-          <DeliveryPanel subtotal={subtotal} deliveryCharge={deliveryCharge} />
+          <DeliveryOptionsPanel subtotal={subtotal} deliveryCharge={deliveryCharge} />
         </section>
       </PageShell>
     </Layout>
@@ -1212,24 +1234,36 @@ function GroceryProductCard({
   );
 }
 
-function DeliveryPanel({ subtotal, deliveryCharge }: { subtotal: number; deliveryCharge: number }) {
-  const [message, setMessage] = useState("Same-day delivery available for selected serviceable pincodes.");
+function CheckoutPanel({ subtotal, deliveryCharge }: { subtotal: number; deliveryCharge: number }) {
+  const [message, setMessage] = useState("Add delivery address and payment method to place the order.");
   const total = subtotal + deliveryCharge;
   const deliverySchema = z.object({
+    fullName: z.string().min(2, "Enter receiver name"),
+    phone: z.string().regex(/^[6-9][0-9]{9}$/, "Enter a valid 10-digit mobile number"),
+    house: z.string().min(2, "Enter house or flat number"),
+    street: z.string().min(4, "Enter street or area"),
+    landmark: z.string().optional(),
+    city: z.string().min(2, "Enter city"),
+    state: z.string().min(2, "Enter state"),
     pincode: z.string().regex(/^[1-9][0-9]{5}$/, "Enter a valid 6-digit pincode"),
     slot: z.string().min(1, "Select a delivery slot"),
-    address: z.string().min(12, "Add a complete delivery address"),
+    paymentMethod: z.string().min(1, "Select payment method"),
   });
 
-  const { register, handleSubmit, watch, formState } = useForm<DeliveryForm>({
+  const { register, handleSubmit, formState } = useForm<DeliveryForm>({
     defaultValues: {
+      fullName: "",
+      phone: "",
+      house: "",
+      street: "",
+      landmark: "",
+      city: "",
+      state: "",
       pincode: "110001",
       slot: deliverySlots[0],
-      address: "Connaught Place, New Delhi",
+      paymentMethod: "UPI",
     },
   });
-
-  const selectedSlot = watch("slot");
 
   function onSubmit(values: DeliveryForm) {
     const parsed = deliverySchema.safeParse(values);
@@ -1237,20 +1271,48 @@ function DeliveryPanel({ subtotal, deliveryCharge }: { subtotal: number; deliver
       setMessage(parsed.error.issues[0]?.message || "Please check delivery details.");
       return;
     }
-    setMessage(`Scheduled for ${values.slot}. Tracking timeline is ready for ${values.pincode}.`);
+    setMessage(`Order ready for ${values.slot}. Payment method: ${values.paymentMethod}.`);
   }
 
   return (
-    <aside className="space-y-5">
+    <aside>
       <form onSubmit={handleSubmit(onSubmit)} className="glass-panel p-5">
         <div className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm uppercase tracking-[0.2em] text-gold">Delivery</p>
-            <h2 className="mt-1 font-display text-2xl font-black">Same-day or scheduled</h2>
+            <p className="text-sm uppercase tracking-[0.2em] text-gold">Checkout</p>
+            <h2 className="mt-1 font-display text-2xl font-black">Address and payment</h2>
           </div>
-          <Truck className="h-7 w-7 text-emerald" />
+          <MapPin className="h-7 w-7 text-emerald" />
         </div>
-        <div className="mt-5 space-y-4">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Full name</span>
+            <input {...register("fullName")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Mobile number</span>
+            <input {...register("phone")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">House / flat</span>
+            <input {...register("house")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Street / area</span>
+            <input {...register("street")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Landmark</span>
+            <input {...register("landmark")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">City</span>
+            <input {...register("city")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
+          <label className="block">
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">State</span>
+            <input {...register("state")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
+          </label>
           <label className="block">
             <span className="text-xs uppercase tracking-[0.18em] text-white/45">Pincode</span>
             <input {...register("pincode")} className="mt-2 h-12 w-full rounded-2xl border border-white/10 bg-white/8 px-4 text-white outline-none focus:border-gold/50" />
@@ -1264,8 +1326,12 @@ function DeliveryPanel({ subtotal, deliveryCharge }: { subtotal: number; deliver
             </select>
           </label>
           <label className="block">
-            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Delivery address</span>
-            <textarea {...register("address")} rows={3} className="mt-2 w-full rounded-2xl border border-white/10 bg-white/8 px-4 py-3 text-white outline-none focus:border-gold/50" />
+            <span className="text-xs uppercase tracking-[0.18em] text-white/45">Payment method</span>
+            <select {...register("paymentMethod")} className="select-control mt-2 w-full">
+              {["UPI", "Credit / Debit Card", "Net Banking", "Cash on Delivery"].map((method) => (
+                <option key={method}>{method}</option>
+              ))}
+            </select>
           </label>
         </div>
         <div className="mt-5 rounded-2xl border border-white/10 bg-white/7 p-4">
@@ -1287,31 +1353,50 @@ function DeliveryPanel({ subtotal, deliveryCharge }: { subtotal: number; deliver
           </div>
         </div>
         <Button type="submit" className="mt-5 w-full" disabled={formState.isSubmitting}>
-          <CalendarClock className="h-4 w-4" />
-          Schedule Delivery
+          <ReceiptText className="h-4 w-4" />
+          Place Order
         </Button>
         <p className="mt-3 text-sm text-white/60">{message}</p>
       </form>
+    </aside>
+  );
+}
 
-      <div className="glass-panel p-5">
-        <p className="text-sm uppercase tracking-[0.2em] text-gold">Order tracking</p>
-        <h2 className="mt-1 font-display text-2xl font-black">Status timeline</h2>
-        <p className="mt-2 text-sm text-white/54">Slot: {selectedSlot}</p>
-        <div className="mt-5 space-y-4">
-          {orderTimeline.map((item, index) => (
-            <div key={item.label} className="relative flex gap-4">
-              {index < orderTimeline.length - 1 && <span className="absolute left-[17px] top-9 h-[calc(100%+10px)] w-px bg-white/12" />}
-              <span className={cn("relative z-10 grid h-9 w-9 place-items-center rounded-full border", item.active ? "border-emerald/50 bg-emerald/15 text-emerald" : "border-white/12 bg-white/8 text-white/35")}>
-                {item.active ? <ShieldCheck className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
-              </span>
-              <span>
-                <span className="block font-semibold">{item.label}</span>
-                <span className="block text-sm text-white/50">{item.detail}</span>
-              </span>
-            </div>
-          ))}
+function DeliveryOptionsPanel({ subtotal, deliveryCharge }: { subtotal: number; deliveryCharge: number }) {
+  return (
+    <aside className="glass-panel h-fit p-5">
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm uppercase tracking-[0.2em] text-gold">Delivery</p>
+          <h2 className="mt-1 font-display text-2xl font-black">Scheduled slots</h2>
+        </div>
+        <Truck className="h-7 w-7 text-emerald" />
+      </div>
+      <div className="mt-5 space-y-3">
+        {deliverySlots.map((slot) => (
+          <div key={slot} className="rounded-2xl border border-white/10 bg-white/7 p-4 text-sm text-white/68">
+            {slot}
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 rounded-2xl border border-white/10 bg-white/7 p-4">
+        <div className="flex justify-between text-sm text-white/62">
+          <span>Minimum order amount</span>
+          <span>₹499</span>
+        </div>
+        <div className="mt-2 flex justify-between text-sm text-white/62">
+          <span>Current cart</span>
+          <span>₹{subtotal.toLocaleString("en-IN")}</span>
+        </div>
+        <div className="mt-2 flex justify-between text-sm text-white/62">
+          <span>Delivery charge</span>
+          <span>{deliveryCharge === 0 ? "Free" : `₹${deliveryCharge}`}</span>
         </div>
       </div>
+      <Link to="/cart" className={cn(buttonStyles({ variant: "primary" }), "mt-5 w-full")}>
+        <ShoppingCart className="h-4 w-4" />
+        Go to Cart
+      </Link>
     </aside>
   );
 }
@@ -1574,8 +1659,113 @@ function CartPage() {
                 </div>
               </div>
             </div>
-            <DeliveryPanel subtotal={subtotal} deliveryCharge={deliveryCharge} />
+            <CheckoutPanel subtotal={subtotal} deliveryCharge={deliveryCharge} />
           </div>
+        </section>
+      </PageShell>
+    </Layout>
+  );
+}
+
+function OrdersPage() {
+  const items = useCartStore((state) => state.items);
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const deliveryCharge = subtotal >= 499 ? 0 : subtotal > 0 ? 49 : 0;
+  const hasItems = items.length > 0;
+
+  return (
+    <Layout>
+      <PageShell
+        eyebrow="Orders"
+        title="Order details and tracking"
+        description="Track your order status, delivery slot, payment status and purchased products in one place."
+      >
+        <section className="grid gap-6 lg:grid-cols-[1fr_380px]">
+          <div className="glass-panel p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase tracking-[0.2em] text-gold">Current order</p>
+                <h2 className="mt-1 font-display text-3xl font-black">
+                  {hasItems ? "Order #AJM-2048" : "No active order"}
+                </h2>
+                <p className="mt-2 text-sm text-white/55">
+                  {hasItems ? "Estimated delivery slot: Today, 6 PM - 8 PM" : "Add products and place an order to see details here."}
+                </p>
+              </div>
+              <Pill className="border-emerald/25 bg-emerald/10 text-emerald">{hasItems ? "In progress" : "Waiting"}</Pill>
+            </div>
+
+            {hasItems ? (
+              <div className="mt-6 space-y-4">
+                {items.map((item) => (
+                  <article key={item.id} className="rounded-[1.5rem] border border-white/10 bg-white/7 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <div className="flex flex-wrap gap-2">
+                          <Pill>{item.source === "fashion" ? "Fashion" : "Grocery"}</Pill>
+                          <Pill>{item.unit}</Pill>
+                        </div>
+                        <h3 className="mt-3 text-xl font-bold">{item.title}</h3>
+                      </div>
+                      <p className="text-lg font-black text-gold">₹{(item.price * item.quantity).toLocaleString("en-IN")}</p>
+                    </div>
+                    <p className="mt-2 text-sm text-white/55">Quantity: {item.quantity}</p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/7 p-8 text-center">
+                <ReceiptText className="mx-auto h-10 w-10 text-gold" />
+                <h3 className="mt-4 text-2xl font-black">No order details yet</h3>
+                <p className="mt-2 text-white/55">Your placed orders and tracking timeline will appear here.</p>
+                <Link to="/grocery" className={cn(buttonStyles({ variant: "primary" }), "mt-6")}>
+                  Start Shopping
+                </Link>
+              </div>
+            )}
+          </div>
+
+          <aside className="space-y-5">
+            <div className="glass-panel p-5">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold">Order summary</p>
+              <div className="mt-5 space-y-3">
+                <div className="flex justify-between text-white/64">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal.toLocaleString("en-IN")}</span>
+                </div>
+                <div className="flex justify-between text-white/64">
+                  <span>Delivery charge</span>
+                  <span>{deliveryCharge === 0 ? "Free" : `₹${deliveryCharge}`}</span>
+                </div>
+                <div className="border-t border-white/10 pt-3 flex justify-between text-xl font-black text-gold">
+                  <span>Total</span>
+                  <span>₹{(subtotal + deliveryCharge).toLocaleString("en-IN")}</span>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/7 p-4 text-sm text-white/62">
+                  Payment status: {hasItems ? "Pending confirmation" : "Not started"}
+                </div>
+              </div>
+            </div>
+
+            <div className="glass-panel p-5">
+              <p className="text-sm uppercase tracking-[0.2em] text-gold">Order tracking</p>
+              <h2 className="mt-1 font-display text-2xl font-black">Status timeline</h2>
+              <div className="mt-5 space-y-4">
+                {orderTimeline.map((item, index) => (
+                  <div key={item.label} className="relative flex gap-4">
+                    {index < orderTimeline.length - 1 && <span className="absolute left-[17px] top-9 h-[calc(100%+10px)] w-px bg-white/12" />}
+                    <span className={cn("relative z-10 grid h-9 w-9 place-items-center rounded-full border", item.active ? "border-emerald/50 bg-emerald/15 text-emerald" : "border-white/12 bg-white/8 text-white/35")}>
+                      {item.active ? <ShieldCheck className="h-4 w-4" /> : <Clock3 className="h-4 w-4" />}
+                    </span>
+                    <span>
+                      <span className="block font-semibold">{item.label}</span>
+                      <span className="block text-sm text-white/50">{item.detail}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
         </section>
       </PageShell>
     </Layout>
@@ -1665,7 +1855,7 @@ function AdminPage() {
                 ? [
                     "32 tomato crates need freshness scan",
                     "8 dairy batches expire within 48 hours",
-                    "South Delhi has high same-day demand",
+                    "South Delhi has high grocery demand",
                     "Supplier invoice PR-2048 needs approval",
                   ]
                 : [
@@ -1722,6 +1912,7 @@ export default function App() {
         <Route path="/fashion/:productId" element={<FashionDetailPage />} />
         <Route path="/grocery" element={<GroceryPage />} />
         <Route path="/cart" element={<CartPage />} />
+        <Route path="/orders" element={<OrdersPage />} />
         <Route path="/admin" element={<AdminPage />} />
         <Route path="*" element={<LandingPage />} />
       </Routes>
